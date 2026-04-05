@@ -23,6 +23,11 @@
 - 文档层优先帮助零基础快速上手
 - `Examples` 主要用于学习、复盘和模板迁移
 
+当前版本：
+
+- [VERSION](./VERSION)
+- [CHANGELOG](./CHANGELOG.md)
+
 ## Repository Structure
 
 ```text
@@ -154,3 +159,7 @@ lanqiao-mcu-template-kit/
 - 示例代码与题面不一致
 
 欢迎继续反馈。这个仓库本身就是按“边使用、边验证、边修正”的思路持续迭代的。
+
+反馈前建议先看：
+
+- [FEEDBACK.md](./FEEDBACK.md)
