@@ -1,0 +1,16 @@
+Objects/
+Listings/
+*.uvgui.*
+*.bak
+*.tmp
+*.lnp
+*.plg
+*.dep
+*.iex
+*.htm
+*.html
+*.map
+*.lst
+*.obj
+*.build_log.htm
+*.hex
