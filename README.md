@@ -71,6 +71,7 @@ lanqiao-mcu-template-kit/
 仓库内保留了完整的训练资料，方便从零开始循序渐进地学：
 
 - [使用说明](./Docs/使用说明.md)
+- [新手最短阅读入口](./Docs/新手最短阅读入口.md)
 - [模板源码导读](./Docs/模板源码导读.md)
 - [赛题要求与代码对应表](./Docs/赛题要求与代码对应表.md)
 - [Keil与烧录入门](./Docs/Keil与烧录入门.md)
@@ -96,13 +97,14 @@ lanqiao-mcu-template-kit/
 如果你是第一次接触这套工程，推荐按下面顺序看：
 
 1. [Docs/使用说明.md](./Docs/使用说明.md)
-2. [Docs/模板源码导读.md](./Docs/模板源码导读.md)
-3. [Docs/赛题要求与代码对应表.md](./Docs/赛题要求与代码对应表.md)
-4. [Docs/Keil与烧录入门.md](./Docs/Keil与烧录入门.md)
-5. [App/app.c](./App/app.c)
-6. [Examples/README.md](./Examples/README.md)
-7. 对应届数的 `.md` 说明
-8. 对应届数的 `.c` 示例
+2. [Docs/新手最短阅读入口.md](./Docs/新手最短阅读入口.md)
+3. [Docs/模板源码导读.md](./Docs/模板源码导读.md)
+4. [Docs/赛题要求与代码对应表.md](./Docs/赛题要求与代码对应表.md)
+5. [Docs/Keil与烧录入门.md](./Docs/Keil与烧录入门.md)
+6. [App/app.c](./App/app.c)
+7. [Examples/README.md](./Examples/README.md)
+8. 对应届数的 `.md` 说明
+9. 对应届数的 `.c` 示例
 
 ## Important Note About Examples
 
