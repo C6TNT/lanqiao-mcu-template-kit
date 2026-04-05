@@ -74,6 +74,9 @@ lanqiao-mcu-template-kit/
 - [新手最短阅读入口](./Docs/新手最短阅读入口.md)
 - [模板源码导读](./Docs/模板源码导读.md)
 - [赛题要求与代码对应表](./Docs/赛题要求与代码对应表.md)
+- [Keil常见报错速查表](./Docs/Keil常见报错速查表.md)
+- [编译报错排查流程](./Docs/编译报错排查流程.md)
+- [报错反馈模板](./Docs/报错反馈模板.md)
 - [Keil与烧录入门](./Docs/Keil与烧录入门.md)
 - [Keil与烧录速查版](./Docs/Keil与烧录速查版.md)
 - [零基础省一学习路线](./Docs/零基础省一学习路线.md)
@@ -100,11 +103,13 @@ lanqiao-mcu-template-kit/
 2. [Docs/新手最短阅读入口.md](./Docs/新手最短阅读入口.md)
 3. [Docs/模板源码导读.md](./Docs/模板源码导读.md)
 4. [Docs/赛题要求与代码对应表.md](./Docs/赛题要求与代码对应表.md)
-5. [Docs/Keil与烧录入门.md](./Docs/Keil与烧录入门.md)
-6. [App/app.c](./App/app.c)
-7. [Examples/README.md](./Examples/README.md)
-8. 对应届数的 `.md` 说明
-9. 对应届数的 `.c` 示例
+5. [Docs/Keil常见报错速查表.md](./Docs/Keil常见报错速查表.md)
+6. [Docs/编译报错排查流程.md](./Docs/编译报错排查流程.md)
+7. [Docs/Keil与烧录入门.md](./Docs/Keil与烧录入门.md)
+8. [App/app.c](./App/app.c)
+9. [Examples/README.md](./Examples/README.md)
+10. 对应届数的 `.md` 说明
+11. 对应届数的 `.c` 示例
 
 ## Important Note About Examples
 
