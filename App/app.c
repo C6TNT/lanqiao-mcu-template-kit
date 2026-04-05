@@ -1,6 +1,19 @@
-/* 默认业务层示例：独立按键演示 + 温度/ADC/超声波/频率/RTC + 高级按键事件演示 */
+/*
+ * 默认业务层示例：
+ * 1. 用独立按键完成页面切换和参数编辑
+ * 2. 显示温度、ADC、时间、频率、距离
+ * 3. 演示报警逻辑
+ * 4. 演示短按、双击、长按事件
+ *
+ * 推荐阅读顺序：
+ * 1. 先看全局变量，理解“页面 / 参数 / 实时数据”
+ * 2. 再看 App_ShowXXXPage，理解每个页面显示什么
+ * 3. 再看 App_HandleKey，理解每个按键改了什么
+ * 4. 最后看 App_Loop，理解各个定时任务怎样拼起来
+ */
 #include "app.h"
 
+/* 页面编号：比赛里最常见的就是多个主界面循环切换。 */
 typedef enum
 {
     PAGE_DATA = 0,
@@ -10,6 +23,7 @@ typedef enum
     PAGE_RECORD
 } app_page_t;
 
+/* 参数编号：参数页当前正在编辑哪一个参数。 */
 typedef enum
 {
     FIELD_TEMP_LIMIT = 0,
@@ -17,34 +31,37 @@ typedef enum
     FIELD_ADC_LIMIT
 } app_field_t;
 
+/* 实时数据：对应赛题里“当前采样值”。 */
 typedef struct
 {
-    float temp;
-    u8 adc;
-    u16 dist;
-    u16 freq;
-    rtc_time_t rtc;
+    float temp;      /* 当前温度，单位摄氏度。 */
+    u8 adc;          /* 当前 ADC 结果。 */
+    u16 dist;        /* 当前距离，单位 cm。 */
+    u16 freq;        /* 当前频率，单位 Hz。 */
+    rtc_time_t rtc;  /* 当前时分秒。 */
 } app_data_t;
 
+/* 参数数据：对应赛题里“可设置阈值”。 */
 typedef struct
 {
-    int temp_limit_x10;
-    u16 dist_limit;
-    u8 adc_limit;
+    int temp_limit_x10; /* 温度阈值放大 10 倍保存，300 表示 30.0C。 */
+    u16 dist_limit;     /* 距离阈值，单位 cm。 */
+    u8 adc_limit;       /* ADC 阈值。 */
 } app_param_t;
 
-static app_page_t g_page = PAGE_DATA;
-static app_field_t g_field = FIELD_TEMP_LIMIT;
-static app_data_t g_data = {0};
-static app_param_t g_param = {300, 30, 200};
-static bit g_param_mode = 0;
-static bit g_alarm = 0;
-static bit g_alarm_flash = 0;
-static u16 g_dist_filtered = 999;
-static u16 g_freq_filtered = 0;
-static u8 g_last_adv_type = 0;
-static u8 g_last_adv_key = 0;
+static app_page_t g_page = PAGE_DATA;          /* 当前主页面。 */
+static app_field_t g_field = FIELD_TEMP_LIMIT; /* 参数页当前选中的参数。 */
+static app_data_t g_data = {0};                /* 当前采样得到的实时数据。 */
+static app_param_t g_param = {300, 30, 200};   /* 默认参数：30.0C / 30cm / ADC 200。 */
+static bit g_param_mode = 0;                   /* 0 浏览参数，1 编辑参数。 */
+static bit g_alarm = 0;                        /* 当前是否处于报警状态。 */
+static bit g_alarm_flash = 0;                  /* 报警闪烁节拍。 */
+static u16 g_dist_filtered = 999;              /* 平滑后的距离值。 */
+static u16 g_freq_filtered = 0;                /* 平滑后的频率值。 */
+static u8 g_last_adv_type = 0;                 /* 最近一次高级按键类型：1短按 2双击 3长按。 */
+static u8 g_last_adv_key = 0;                  /* 最近一次高级按键对应的键号。 */
 
+/* -------------------- 串口输出辅助区 -------------------- */
 static void App_UartSendU16(u16 value)
 {
     char buf[6];
@@ -105,6 +122,11 @@ static void App_UartSendParam(void)
     UART_SendString("\r\n");
 }
 
+/* 串口查询命令：
+ * ? / s : 返回一组实时数据
+ * p     : 返回当前参数
+ * h     : 返回帮助
+ */
 static void App_HandleUart(void)
 {
     u8 rx;
@@ -137,6 +159,10 @@ static void App_HandleUart(void)
     }
 }
 
+/* -------------------- 参数存取区 -------------------- */
+/* 保存参数到 EEPROM。
+ * 对应很多赛题里的“掉电保存参数”要求。
+ */
 static void App_SaveParam(void)
 {
     AT24C02_WriteByte(0x00, (u8)(g_param.temp_limit_x10 / 10));
@@ -145,6 +171,9 @@ static void App_SaveParam(void)
     AT24C02_WriteByte(0x03, g_param.adc_limit);
 }
 
+/* 读取参数。
+ * 如果 EEPROM 里的内容不合理，就继续使用默认值。
+ */
 static void App_LoadParam(void)
 {
     u8 a;
@@ -177,6 +206,8 @@ static void App_LoadParam(void)
     }
 }
 
+/* -------------------- 页面显示区 -------------------- */
+/* 数据页：左边温度，右边 ADC。 */
 static void App_ShowDataPage(void)
 {
     int temp10;
@@ -186,6 +217,7 @@ static void App_ShowDataPage(void)
     SEG_ClearBuffer();
     SEG_SetCode(0, SEG_C);
 
+    /* 上电前 800ms 内，温度传感器还在稳定，先不显示错误初值。 */
     if(g_ms_ticks < 800u)
     {
         SEG_SetCode(1, SEG_DASH);
@@ -206,6 +238,7 @@ static void App_ShowDataPage(void)
     SEG_SetDigit(7, g_data.adc % 10);
 }
 
+/* 参数页：显示当前查看或编辑的参数。 */
 static void App_ShowParamPage(void)
 {
     SEG_ClearBuffer();
@@ -236,12 +269,14 @@ static void App_ShowParamPage(void)
         break;
     }
 
+    /* 右下角的 A 用来提醒：当前不是浏览参数，而是在编辑参数。 */
     if(g_param_mode)
     {
         SEG_SetCode(7, SEG_A);
     }
 }
 
+/* 时间页：显示 RTC 的时分秒。 */
 static void App_ShowTimePage(void)
 {
     SEG_ClearBuffer();
@@ -255,6 +290,7 @@ static void App_ShowTimePage(void)
     SEG_SetDigit(7, g_data.rtc.sec % 10);
 }
 
+/* 频率页：显示频率值。 */
 static void App_ShowFreqPage(void)
 {
     SEG_ClearBuffer();
@@ -262,6 +298,7 @@ static void App_ShowFreqPage(void)
     SEG_SetNumber(g_data.freq, 1, 7, 1);
 }
 
+/* 记录页：默认显示距离和最近一次高级按键事件。 */
 static void App_ShowRecordPage(void)
 {
     SEG_ClearBuffer();
@@ -295,6 +332,7 @@ static void App_ShowRecordPage(void)
     }
 }
 
+/* 根据页面编号，刷新到对应界面。 */
 static void App_UpdateDisplay(void)
 {
     switch(g_page)
@@ -321,6 +359,7 @@ static void App_UpdateDisplay(void)
     }
 }
 
+/* -------------------- 参数编辑区 -------------------- */
 static void App_FieldNext(void)
 {
     g_field++;
@@ -330,6 +369,7 @@ static void App_FieldNext(void)
     }
 }
 
+/* 参数增加：很像比赛中的“加键”处理。 */
 static void App_FieldAdd(void)
 {
     switch(g_field)
@@ -357,6 +397,7 @@ static void App_FieldAdd(void)
     }
 }
 
+/* 参数减少：很像比赛中的“减键”处理。 */
 static void App_FieldSub(void)
 {
     switch(g_field)
@@ -384,6 +425,17 @@ static void App_FieldSub(void)
     }
 }
 
+/* -------------------- 按键处理区 -------------------- */
+/* 普通模式：
+ * key1 切页面
+ * key2 在参数页进入编辑
+ *
+ * 参数模式：
+ * key1 切参数项
+ * key2 保存并退出
+ * key3 参数加
+ * key4 参数减
+ */
 static void App_HandleKey(u8 key)
 {
     if(!g_param_mode)
@@ -436,6 +488,12 @@ static void App_HandleKey(u8 key)
     }
 }
 
+/* -------------------- 状态判断区 -------------------- */
+/* 满足任意一条就报警：
+ * 1. 温度超阈值
+ * 2. 距离小于阈值
+ * 3. ADC 超阈值
+ */
 static void App_UpdateAlarm(void)
 {
     g_alarm = 0;
@@ -448,6 +506,7 @@ static void App_UpdateAlarm(void)
     }
 }
 
+/* -------------------- 应用入口区 -------------------- */
 void App_Init(void)
 {
     Board_Init();
@@ -469,6 +528,14 @@ void App_Init(void)
     UART_SendString("UART ready. Send '?' for snapshot.\r\n");
 }
 
+/* 主循环拆分思路：
+ * 10ms  : 按键扫描、事件生成
+ * 100ms : 温度 / ADC / 距离采样
+ * 500ms : 频率更新、报警闪烁
+ * 1s    : RTC 更新时间
+ *
+ * 这也是大多数省赛综合题最常见的业务组织方式。
+ */
 void App_Loop(void)
 {
     u8 key;
@@ -519,9 +586,12 @@ void App_Loop(void)
         u16 dist_now;
 
         g_flag_100ms = 0;
+
+        /* 这里对应赛题里的传感器采样部分。 */
         g_data.adc = PCF8591_ReadADC(0x01);
         g_data.temp = DS18B20_ReadTemp();
 
+        /* 距离增加一层平滑，让显示更稳定。 */
         dist_now = Ultrasonic_ReadCm();
         if(dist_now >= 999u)
         {
@@ -546,6 +616,7 @@ void App_Loop(void)
         g_flag_500ms = 0;
         g_alarm_flash = !g_alarm_flash;
 
+        /* 这里对应赛题里的频率测量和报警输出部分。 */
         FREQ_PollTask();
         g_data.freq = FREQ_GetHz();
         if(g_freq_filtered == 0u)

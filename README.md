@@ -9,6 +9,10 @@
 - 学会按题面改业务层
 - 通过刷历届真题提升到省一和国赛备赛水平
 
+当前维护版本：
+
+- [V1.0](./VERSION)
+
 ## Project Status
 
 当前仓库定位为：
@@ -67,6 +71,8 @@ lanqiao-mcu-template-kit/
 仓库内保留了完整的训练资料，方便从零开始循序渐进地学：
 
 - [使用说明](./Docs/使用说明.md)
+- [模板源码导读](./Docs/模板源码导读.md)
+- [赛题要求与代码对应表](./Docs/赛题要求与代码对应表.md)
 - [Keil与烧录入门](./Docs/Keil与烧录入门.md)
 - [Keil与烧录速查版](./Docs/Keil与烧录速查版.md)
 - [零基础省一学习路线](./Docs/零基础省一学习路线.md)
@@ -90,11 +96,13 @@ lanqiao-mcu-template-kit/
 如果你是第一次接触这套工程，推荐按下面顺序看：
 
 1. [Docs/使用说明.md](./Docs/使用说明.md)
-2. [Docs/Keil与烧录入门.md](./Docs/Keil与烧录入门.md)
-3. [App/app.c](./App/app.c)
-4. [Examples/README.md](./Examples/README.md)
-5. 对应届数的 `.md` 说明
-6. 对应届数的 `.c` 示例
+2. [Docs/模板源码导读.md](./Docs/模板源码导读.md)
+3. [Docs/赛题要求与代码对应表.md](./Docs/赛题要求与代码对应表.md)
+4. [Docs/Keil与烧录入门.md](./Docs/Keil与烧录入门.md)
+5. [App/app.c](./App/app.c)
+6. [Examples/README.md](./Examples/README.md)
+7. 对应届数的 `.md` 说明
+8. 对应届数的 `.c` 示例
 
 ## Important Note About Examples
 
